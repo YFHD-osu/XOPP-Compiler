@@ -2,77 +2,6 @@
 
 name: Convert to PDF
 
-# 定義可重複使用的步驟
-.pre_execute: &pre_execute
-  - name: Checkout repository
-    uses: actions/checkout@v4
-
-  - name: Cache apt lists
-    id: cache-apt-lists
-    uses: actions/cache@v4
-    with:
-      path: /var/lib/apt/lists
-      # 建立一個基於 runner OS 和日期的 key。
-      # 當日期改變時，快取會失效並重新執行 apt-get update。
-      key: ${{ runner.os }}-apt-lists-${{ hashFiles('**/lockfiles') }}-${{ secrets.CACHE_VERSION || 'v1' }}
-      # 如果找不到完全匹配的 key，使用最接近的舊快取
-      restore-keys: |
-        ${{ runner.os }}-apt-lists-
-
-  - name: Update apt if cache not hit
-    # 只有在快取沒有命中時才執行 apt-get update
-    if: steps.cache-apt-lists.outputs.cache-hit != 'true'
-    run: sudo apt-get update
-
-  - name: Set Git Identity
-    run: |
-      git config --global user.name "GitHub Actions"
-      git config --global user.email "actions@github.com"
-
-  - name: Install Dependencies
-    run: |
-      sudo apt update
-      sudo apt install xournalpp
-
-.post_execute: &post_execute
-  - name: Move output files and prepare branch
-    run: |
-      # 1. 將 output 資料夾保存到臨時目錄以外的位置
-      mkdir -p /tmp/output_backup
-      cp -r ./output/* /tmp/output_backup/
-      
-      # 2. 刪除所有檔案(除了 .git)
-      find . -mindepth 1 -not -path "./.git*" -delete
-      
-      # 3. 將 output 資料夾中的檔案複製到根目錄
-      cp -r /tmp/output_backup/* ./
-      
-      # 4. 確認檔案已正確複製
-      ls -la
-
-  - name: Delete old output branch if exists
-    run: |
-      # 檢查 output-branch 是否存在
-      if git ls-remote --heads origin output-branch | grep output-branch; then
-        # 5. 刪除遠端 output-branch 分支
-        git push origin --delete output-branch
-      fi
-    continue-on-error: true  # 如果分支不存在，允許繼續
-
-  - name: Create and switch to output branch
-    run: |
-      # 6. 建立並切換到 output-branch
-      git checkout --orphan output-branch
-      
-      # 7. 添加所有檔案到暫存區
-      git add .
-      
-      # 8. 提交更改
-      git commit -m "Update output files"
-      
-      # 9. 推送到 output-branch
-      git push origin output-branch --force
-
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
@@ -91,7 +20,35 @@ jobs:
     permissions:
       contents: write
     steps:
-      - <<: *pre_execute
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache apt lists
+        id: cache-apt-lists
+        uses: actions/cache@v4
+        with:
+          path: /var/lib/apt/lists
+          # 建立一個基於 runner OS 和日期的 key。
+          # 當日期改變時，快取會失效並重新執行 apt-get update。
+          key: ${{ runner.os }}-apt-lists-${{ hashFiles('**/lockfiles') }}-${{ secrets.CACHE_VERSION || 'v1' }}
+          # 如果找不到完全匹配的 key，使用最接近的舊快取
+          restore-keys: |
+            ${{ runner.os }}-apt-lists-
+
+      - name: Update apt if cache not hit
+        # 只有在快取沒有命中時才執行 apt-get update
+        if: steps.cache-apt-lists.outputs.cache-hit != 'true'
+        run: sudo apt-get update
+
+      - name: Set Git Identity
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install xournalpp
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -101,16 +58,116 @@ jobs:
       - name: Execute Python script
         run: python .deploy/convert.py
       
-      - <<: *post_execute
+      - name: Move output files and prepare branch
+        run: |
+          # 1. 將 output 資料夾保存到臨時目錄以外的位置
+          mkdir -p /tmp/output_backup
+          cp -r ./output/* /tmp/output_backup/
+          
+          # 2. 刪除所有檔案(除了 .git)
+          find . -mindepth 1 -not -path "./.git*" -delete
+          
+          # 3. 將 output 資料夾中的檔案複製到根目錄
+          cp -r /tmp/output_backup/* ./
+          
+          # 4. 確認檔案已正確複製
+          ls -la
+
+      - name: Delete old output branch if exists
+        run: |
+          # 檢查 output-branch 是否存在
+          if git ls-remote --heads origin output-branch | grep output-branch; then
+            # 5. 刪除遠端 output-branch 分支
+            git push origin --delete output-branch
+          fi
+        continue-on-error: true  # 如果分支不存在，允許繼續
+
+      - name: Create and switch to output branch
+        run: |
+          # 6. 建立並切換到 output-branch
+          git checkout --orphan output-branch
+          
+          # 7. 添加所有檔案到暫存區
+          git add .
+          
+          # 8. 提交更改
+          git commit -m "Update output files"
+          
+          # 9. 推送到 output-branch
+          git push origin output-branch --force
       
   Shell:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - <<: *pre_execute
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache apt lists
+        id: cache-apt-lists
+        uses: actions/cache@v4
+        with:
+          path: /var/lib/apt/lists
+          # 建立一個基於 runner OS 和日期的 key。
+          # 當日期改變時，快取會失效並重新執行 apt-get update。
+          key: ${{ runner.os }}-apt-lists-${{ hashFiles('**/lockfiles') }}-${{ secrets.CACHE_VERSION || 'v1' }}
+          # 如果找不到完全匹配的 key，使用最接近的舊快取
+          restore-keys: |
+            ${{ runner.os }}-apt-lists-
+
+      - name: Update apt if cache not hit
+        # 只有在快取沒有命中時才執行 apt-get update
+        if: steps.cache-apt-lists.outputs.cache-hit != 'true'
+        run: sudo apt-get update
+
+      - name: Set Git Identity
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install xournalpp
 
       - name: Execute Shell script
         run: chmod +x ./.deploy/convert.sh && ./.deploy/convert.sh
 
-      - <<: *post_execute
+      - name: Move output files and prepare branch
+        run: |
+          # 1. 將 output 資料夾保存到臨時目錄以外的位置
+          mkdir -p /tmp/output_backup
+          cp -r ./output/* /tmp/output_backup/
+          
+          # 2. 刪除所有檔案(除了 .git)
+          find . -mindepth 1 -not -path "./.git*" -delete
+          
+          # 3. 將 output 資料夾中的檔案複製到根目錄
+          cp -r /tmp/output_backup/* ./
+          
+          # 4. 確認檔案已正確複製
+          ls -la
+
+      - name: Delete old output branch if exists
+        run: |
+          # 檢查 output-branch 是否存在
+          if git ls-remote --heads origin output-branch | grep output-branch; then
+            # 5. 刪除遠端 output-branch 分支
+            git push origin --delete output-branch
+          fi
+        continue-on-error: true  # 如果分支不存在，允許繼續
+
+      - name: Create and switch to output branch
+        run: |
+          # 6. 建立並切換到 output-branch
+          git checkout --orphan output-branch
+          
+          # 7. 添加所有檔案到暫存區
+          git add .
+          
+          # 8. 提交更改
+          git commit -m "Update output files"
+          
+          # 9. 推送到 output-branch
+          git push origin output-branch --force
