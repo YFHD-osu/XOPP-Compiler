@@ -163,6 +163,8 @@ convert_to_pdf() {
 
 # --- 主函式 ---
 main() {
+  mkdir -p $OUTPUT_DIR
+  
   # 找出所有 .xopp 檔案，並排除 .autosave.xopp 檔案
   # 使用 mapfile 將 find 的結果安全地讀入一個陣列
   mapfile -t files < <(find . -type f -name "*.xopp" ! -name "*.autosave.xopp" | sort)
