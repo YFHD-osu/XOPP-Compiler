@@ -2,14 +2,6 @@ import re
 import gzip
 import subprocess
 from pathlib import Path
-import os
-import sys
-import xml.etree.ElementTree as ET
-import tempfile
-import subprocess
-import shutil
-from pathlib import Path
-import re
 
 OUTPUT_DIR = "./output"
 
@@ -18,7 +10,7 @@ class XoppUtils:
     self.path = path
     pass
 
-  def _findBestAbsolute(self, file: Path) -> Path:
+  def _findBestAbsolute(self, file: Path) -> Path | None:
     targetParent = str(file.parent).split("/")
 
     def _compareLastNIsSame(a: list, b: list, n: int) -> bool:
@@ -44,7 +36,7 @@ class XoppUtils:
         reverse=True
     )
                         
-    return possibility[0]
+    return possibility[0] if possibility else None
   
   def fixBackground(self):
     with gzip.open(self.path.absolute(), 'rt', encoding='utf-8') as fin:
@@ -64,6 +56,7 @@ class XoppUtils:
     
     if not newPath:
       return
+    
     print(f"RESULT IS: {newPath.absolute()}")
     
     content = re.sub(r'filename="(.+?)/([^/]+\.pdf)"', f'filename="{newPath.absolute()}"', content)
@@ -89,22 +82,22 @@ class XoppUtils:
     return result
 
 def main() -> None:
-    files = XoppUtils.fetchXoppFiles()
+  files = XoppUtils.fetchXoppFiles()
 
-    count = len(files)
-    print(f"Found {count} valid files in this directory.")
+  count = len(files)
+  print(f"Found {count} valid files in this directory.")
 
-    for index, item in enumerate(files, 1):
-      print(f"[{index}/{count}]", end=f" Processing \"{item.path.name}\" ")
+  for index, item in enumerate(files, 1):
+    print(f"[{index}/{count}]", end=f" Processing \"{item.path.name}\" ")
 
-      print(f"fix pdf...", end=" ")
-      item.fixBackground()
-      print("Done.")
+    print(f"fix pdf...", end=" ")
+    item.fixBackground()
+    print("Done.")
 
-      try:
-          item.convertToPdf()
-      except subprocess.CalledProcessError as e:
-          print(f"Error converting {item.path.name} \n{e.stderr}")
+    try:
+        item.convertToPdf()
+    except subprocess.CalledProcessError as e:
+        print(f"Error converting {item.path.name} \n{e.stderr}")
 
 if __name__ == "__main__":
     main()
