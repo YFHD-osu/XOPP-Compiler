@@ -139,7 +139,8 @@ jobs:
 
       - name: Move output files and prepare branch
         run: |
-          # Temporarily move all files outside the repo 
+          # 1. Temporarily move all files outside the repo 
+          mkdir -p ./output/
           mkdir -p /tmp/output_backup
           cp -r ./output/* /tmp/output_backup
           
