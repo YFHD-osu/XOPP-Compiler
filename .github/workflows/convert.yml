@@ -139,8 +139,13 @@ jobs:
 
       - name: Move output files and prepare branch
         run: |
+          # 0. Check if output folder is empty
+          if [ -z "$(ls -A /path/to/directory)" ]; then
+            echo "No file needed to by upload"
+            exit 0
+          fi
+
           # 1. Temporarily move all files outside the repo 
-          mkdir -p ./output/
           mkdir -p /tmp/output_backup
           cp -r ./output/* /tmp/output_backup
           
