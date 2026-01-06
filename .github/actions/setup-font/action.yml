@@ -68,7 +68,6 @@ runs:
         echo "所有 URL 字型下載完畢。"
 
     - name: Update Font Cache
-      # Update font cache 
       shell: bash
       if: ${{ inputs.required_fonts != '' || inputs.custom_urls != '' }}
       run: fc-cache -fv

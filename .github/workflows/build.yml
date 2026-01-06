@@ -46,12 +46,12 @@ jobs:
       - name: Checkout Upstream (Build Tools)
         uses: actions/checkout@v4
         with:
-          repository: NTUT-Notes/XOPP-Compiler
+          repository: YFHD-osu/XOPP-Compiler
           path: .build-tools
           ref: main
 
       - name: Install fonts
-        uses: NTUT-Notes/XOPP-Compiler/.github/actions/setup-font@main
+        uses: YFHD-osu/XOPP-Compiler/.github/actions/setup-font@main
         with:
           formula_name: ${{ inputs.required_fonts }}
           custom_urls: ${{ inputs.custom_font_urls }}
