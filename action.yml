@@ -8,18 +8,6 @@ inputs:
   output_directory:
     type: string
     default: 'compiled-pdfs'
-
-  publish_branch:
-    description: 'The name of the output branch'
-    type: string
-    default: ''
-    required: false
-
-  github_token:
-    description: 'Token for managing the branch'
-    type: string
-    default: ''
-    required: false
     
   font_name:
     type: string
@@ -131,14 +119,3 @@ runs:
         # 假設它在 scripts 資料夾下 (請根據上面 ls -R 的結果修改這裡)
 
         bash ${{ github.workspace }}/.build-tools/convert.sh "${{ github.workspace }}/${{ inputs.output_directory }}"
-
-    - name: Deploy to Output Branch
-      if: ${{ inputs.publish_branch != '' }}
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ inputs.github_token }}
-        publish_dir: ${{ inputs.output_directory }}
-        
-        publish_branch: ${{ inputs.publish_branch }}
-        force_orphan: true
-        commit_message: "Deploy compiled PDFs from ${{ github.sha }}"
